@@ -31,7 +31,6 @@ router.post("/",upload.single('coursIamges'), async (req, res) => {
 
     });
   
-  console.log("dakhlet lel  fonc")
 
 
     const coursCreated = await cours.save();
@@ -44,7 +43,6 @@ router.post("/",upload.single('coursIamges'), async (req, res) => {
    */
 
    router.get("/", async (req, res) => {
-    console.log("dkhal lel get all offres");
     const coursFind = await coursModel.find();
     res.json(coursFind);
   });
@@ -55,7 +53,6 @@ router.post("/",upload.single('coursIamges'), async (req, res) => {
  router.get("/nom_mosquee/:nom_mosque/:type", async (req, res) => {
   nom_mosquee = req.params.nom_mosque;
   type = req.params.type;
-  console.log("dkhal lel get  cours by name");
 
   if(type==="admin"){
   const coursFindByNomMosquee = await coursModel.find({ nom_mosquee });
@@ -65,17 +62,23 @@ router.post("/",upload.single('coursIamges'), async (req, res) => {
     res.json(coursFind);
   }
 });
- /** */
-  /** afficher une  offres selon le nom
-   */
+ /** afficher un cours selon le nom
+ */
 
-   router.get("/:nom", async (req, res) => {
-    nom_cours=req.params.nom;
+router.get("/getcoursbyname/:nom", async (req,res)=>{
+  nom_cours=req.params.nom;
+  const mawjoud="mawjoud"
+  const mechmawjoud="mechmawjoud"
+  const cours = await coursModel.findOne({nom_cours});
+  if(cours===null){
+    res.json(mechmawjoud);
 
-    console.log("dkhal lel get  cours by name");
-    const coursFindone = await coursModel.findOne({ nom_cours });
-    res.json(coursFindone);
-  });
+  }else{
+    res.json(mawjoud);
+
+  }
+
+})
 
   /** */
 /** afficher une  offres selon le nom de mosquee 2
@@ -83,7 +86,6 @@ router.post("/",upload.single('coursIamges'), async (req, res) => {
 
  router.get("/nom_mosquee/:nom_mosque", async (req, res) => {
   nom_mosquee = req.params.nom_mosque;
-  console.log("dkhal lel get  offres by name");
   
   const coursFindByNomMosquee = await coursModel.find({ nom_mosquee });
   res.json(coursFindByNomMosquee);    
@@ -93,7 +95,6 @@ router.post("/",upload.single('coursIamges'), async (req, res) => {
   /** delete cour */
 router.delete("/:nom", async (req, res) => {
     nom_cours=req.params.nom;
-    console.log(nom_cours);
     let coursdelete = await coursModel.findOneAndRemove({ nom_cours })
     //console.log(coursdelete);
     res.json(coursdelete);
@@ -101,13 +102,38 @@ router.delete("/:nom", async (req, res) => {
    /** delete cour with  mosque name */
 router.delete("/nom_mosque/:nom", async (req, res) => {
   nom_mosquee=req.params.nom;
-  console.log(nom_cours);
   let coursdelete = await coursModel.findOneAndRemove({ nom_mosquee })
   //console.log(coursdelete);
   res.json(coursdelete);
 });
 
+router.put("/:id", (async (req, res) => {
 
+
+
+  let _id = req.params.id;
+
+  let upCours = await coursModel.findOne({ _id });
+
+    (upCours.nom_cours = req.body.nom_cours),
+    (upCours.description = req.body.description),
+    (upCours.date_debut = req.body.date_debut),
+    (upCours.date_fin = req.body.date_fin),
+    (upCours.mail_admin = req.body.mail_admin),
+    (upCours.nbr_personnes = req.body.nbr_personnes),
+    (upCours.pictureName = req.body.pictureName);
+    (upCours.nom_mosquee = req.body.nom_mosquee);
+    (upCours.ville = upCours.ville);
+    (upCours.prix = req.body.prix);
+
+
+
+
+  const upcours = await upCours.save();
+  res.status(200).json(upcours);
+
+})
+);
    /** inscription dans  un  offre */
 router.put("/inscription/cours/:nom", async (req, res) => {
     nom_cours=req.params.nom;
@@ -128,7 +154,6 @@ router.put("/inscription/cours/:nom", async (req, res) => {
   upCondidat.condidats.push(new_condidat) ;
 
   const coursupdate =upCondidat.save( );
-    console.log(coursupdate);
     res.json(coursupdate);
     const transp = nodemailer.createTransport({
       service: "gmail",
@@ -136,22 +161,20 @@ router.put("/inscription/cours/:nom", async (req, res) => {
       port: 587,
       secure: false, // true for 465, false for other ports
       auth: {
-        user: "hassen.jalleli@esprit.tn",
-        pass: "hassen161jmt0715"
+        user: "mosqueefrance2021@gmail.com",
+        pass: "azerty@1234"
       }
     });
     const options = {
-      from: "hassen.jalleli@esprit.tn",
+      from: "mosqueefrance2021@gmail.com",
       to: upCondidat.mail_admin,
       subject: "test mail",
       text: "ther is a new reservation ",
     };
     transp.sendMail(options, function (err, info) {
       if (err) {
-        console.log(err);
         return;
       }
-      console.log("sent : " + info.response);
     })
 }else{
     res.json("désolé mais ce cours  est complète ")
@@ -187,6 +210,44 @@ router.put("/inscription/cours/:nom", async (req, res) => {
   })
   );*/
   
+  router.post("/sendemailOnUpdate/:email/:nom_condidat", (async (req, res) => {
+    const transp = nodemailer.createTransport({
+      service: "gmail",
+      host: "smtp.ethereal.email",
+      port: 587,
+      secure: false, // true for 465, false for other ports
+      auth: {
+        user: "mosqueefrance2021@gmail.com",
+        pass: "azerty@1234"
+      }
+    });
+    const options = {
+      from: "mosqueefrance2021@gmail.com",
+      to: req.params.email,
+      subject: "Mosquee",
+      html:`
+      <h2>désolé (monsieur/madame) `+ req.params.nom_condidat+` </h2>
+      <h3> nous avons Modifier (l'offre/cours) , et voici les nouvelles  informations  de  notre offre </h3>
+      <br/>
+      <h4> nom offre : `+req.body.nom_offre+ ` </h4>
+      <h4> description : `+req.body.description+ ` </h4>
+      <h4> date debut : `+req.body.date_debut+ ` </h4>
+      <h4> date fin : `+req.body.date_fin+ ` </h4>
+      <h4> prix : `+req.body.prix+ ` </h4>
+      <h4> type : `+req.body.type+ ` </h4>
+      
   
+      `,
+      
+      
+    };
+    transp.sendMail(options, function (err, info) {
+      if (err) {
+        return;
+      }
+    })
+  res.json()
+  })
+  );
 
   module.exports = router;

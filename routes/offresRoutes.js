@@ -18,7 +18,6 @@ const storage = multer.diskStorage({
 const upload = multer({ storage: storage });
 /*  ajouter un offre */
 router.post("/", upload.single('offresIamges'), async (req, res) => {
-  console.log("dakhlet lel  fonc")
 
 
   const offre = new offresModel({
@@ -36,7 +35,6 @@ router.post("/", upload.single('offresIamges'), async (req, res) => {
 
   });
 
-  console.log("dakhlet lel  fonc")
 
   const offreCreated = await offre.save();
 
@@ -48,7 +46,6 @@ router.post("/", upload.single('offresIamges'), async (req, res) => {
  */
 
 router.get("/", async (req, res) => {
-  console.log("dkhal lel get all offres");
   const offreFind = await offresModel.find();
   res.json(offreFind);
 });
@@ -56,7 +53,6 @@ router.get("/", async (req, res) => {
 /** afficher touts les omra
  */
 router.get("/omra", async (req, res) => {
-  console.log("dkhal lel get all offres omra");
   type="omra"
   const offreFind = await offresModel.find({type});
   res.json(offreFind);
@@ -65,7 +61,6 @@ router.get("/omra", async (req, res) => {
 /** afficher touts les haja
  */
  router.get("/haja", async (req, res) => {
-  console.log("dkhal lel get all offres haja");
   type="haja"
   const offreFind = await offresModel.find({type});
   res.json(offreFind);
@@ -74,15 +69,20 @@ router.get("/omra", async (req, res) => {
 /** afficher une  offres selon le nom
  */
 
-router.get("/:nom", async (req, res) => {
-  nom_offre = req.params.nom;
+router.get("/getoffrebyname/:nom", async (req,res)=>{
+  nom_offre=req.params.nom;
+  const mawjoud="mawjoud"
+  const mechmawjoud="mechmawjoud"
+  const offre = await offresModel.findOne({nom_offre});
+  if(offre===null){
+    res.json(mechmawjoud);
 
-  console.log("dkhal lel get  offres by name");
-  console.log(nom_offre)
-  const offreFindone = await offresModel.findOne({ nom_offre });
-  
-  res.json(offreFindone);
-});
+  }else{
+    res.json(mawjoud);
+
+  }
+
+})
 /** */
 /** afficher une  offres selon le nom de mosquee
  */
@@ -90,7 +90,6 @@ router.get("/:nom", async (req, res) => {
  router.get("/nom_mosquee/:nom_mosque/:type", async (req, res) => {
   nom_mosquee = req.params.nom_mosque;
   type = req.params.type;
-  console.log("dkhal lel get  offres by name");
   
   const offreFindByNomMosquee = await offresModel.find({ nom_mosquee });
   res.json(offreFindByNomMosquee);    
@@ -103,7 +102,6 @@ router.get("/:nom", async (req, res) => {
 
  router.get("/nom_mosquee/:nom_mosque", async (req, res) => {
   nom_mosquee = req.params.nom_mosque;
-  console.log("dkhal lel get  offres by name");
   
   const offreFindByNomMosquee = await offresModel.find({ nom_mosquee });
   res.json(offreFindByNomMosquee);    
@@ -113,15 +111,12 @@ router.get("/:nom", async (req, res) => {
 /** delete offre */
 router.delete("/:nom", async (req, res) => {
   nom_offre = req.params.nom;
-  console.log(nom_offre);
   let offredelete = await offresModel.findOneAndRemove({ nom_offre })
-  console.log(offredelete);
   res.json(offredelete);
 });
    /** delete offre with  mosque name */
    router.delete("/nom_mosque/:nom", async (req, res) => {
     nom_mosquee=req.params.nom;
-    console.log(nom_mosquee);
     let offredelete = await offresModel.findOneAndRemove({ nom_mosquee })
     //console.log(coursdelete);
     res.json(offredelete);
@@ -129,6 +124,7 @@ router.delete("/:nom", async (req, res) => {
 /** inscription dans  un  offre */
 router.put("/inscription/offres/:nom", async (req, res) => {
   nom_offre = req.params.nom;
+  console.log(nom_offre)
   const new_condidat = {
     nom_condidat: req.body.nom_condidat,
     prenom_condidat: req.body.prenom_condidat,
@@ -137,7 +133,8 @@ router.put("/inscription/offres/:nom", async (req, res) => {
     numero_condidat: req.body.numero_condidat
   }
 
-  let upCondidat = await offresModel.findOne({ nom_offre })
+  let upCondidat = await offresModel.findOne({nom_offre})
+  console.log(upCondidat);
   if (upCondidat.nbr_personnes > 0) {
     const obj = {
       condidats: new_condidat
@@ -146,7 +143,6 @@ router.put("/inscription/offres/:nom", async (req, res) => {
     upCondidat.condidats.push(new_condidat);
 
     const offrepdate = upCondidat.save();
-    console.log(offrepdate);
     res.json(offrepdate);
     /** send  mail  */
 
@@ -156,22 +152,20 @@ router.put("/inscription/offres/:nom", async (req, res) => {
       port: 587,
       secure: false, // true for 465, false for other ports
       auth: {
-        user: "hassen.jalleli@esprit.tn",
-        pass: "hassen161jmt0715"
+        user: "mosqueefrance2021@gmail.com",
+        pass: "azerty@1234"
       }
     });
     const options = {
-      from: "hassen.jalleli@esprit.tn",
+      from: "mosqueefrance2021@gmail.com",
       to: upCondidat.mail_admin,
       subject: "test mail",
       text: "ther is a new reservation ",
     };
     transp.sendMail(options, function (err, info) {
       if (err) {
-        console.log(err);
         return;
       }
-      console.log("sent : " + info.response);
     })
     /**/
 
@@ -179,6 +173,35 @@ router.put("/inscription/offres/:nom", async (req, res) => {
     res.json("désolé mais cette offre est complète ")
   }
 });
+
+router.put("/:id", (async (req, res) => {
+
+
+
+  let _id = req.params.id;
+
+  let upOffre = await offresModel.findOne({ _id });
+
+    (upOffre.nom_offre = req.body.nom_offre),
+    (upOffre.description = req.body.description),
+    (upOffre.type = req.body.type),
+    (upOffre.date_debut = req.body.date_debut),
+    (upOffre.date_fin = req.body.date_fin),
+    (upOffre.mail_admin = req.body.mail_admin),
+    (upOffre.nbr_personnes = req.body.nbr_personnes),
+    (upOffre.pictureName = req.body.pictureName);
+    (upOffre.nom_mosquee = req.body.nom_mosquee);
+    (upOffre.ville = upOffre.ville);
+    (upOffre.prix = req.body.prix);
+
+
+
+
+  const upoffre = await upOffre.save();
+  res.status(200).json(upoffre);
+
+})
+);
 /*************/ 
 router.post("/sendemail/:email/:nom_condidat", (async (req, res) => {
   const transp = nodemailer.createTransport({
@@ -187,22 +210,62 @@ router.post("/sendemail/:email/:nom_condidat", (async (req, res) => {
     port: 587,
     secure: false, // true for 465, false for other ports
     auth: {
-      user: "hassen.jalleli@esprit.tn",
-      pass: "hassen161jmt0715"
+      user: "mosqueefrance2021@gmail.com",
+      pass: "azerty@1234"
     }
   });
   const options = {
-    from: "hassen.jalleli@esprit.tn",
+    from: "mosqueefrance2021@gmail.com",
     to: req.params.email,
     subject: "Mosquee",
-    text: "désolé (monsieur/madame) "+ req.params.nom_condidat+"  nous avons annulé (l'offre/cours) , votre argent sera remboursé, si vous voulez, vous pouvez consulter notre application pour de nouvelles offres" 
+    text: "désolé (monsieur/madame) "+ req.params.nom_condidat+
+    "  nous avons annulé (l'offre/cours) , votre argent sera remboursé,"+ 
+    "si vous voulez, vous pouvez consulter notre application pour de nouvelles offres" 
   };
   transp.sendMail(options, function (err, info) {
     if (err) {
-      console.log(err);
       return;
     }
-    console.log("sent : " + info.response);
+  })
+res.json()
+})
+);
+
+router.post("/sendemailOnUpdate/:email/:nom_condidat", (async (req, res) => {
+  const transp = nodemailer.createTransport({
+    service: "gmail",
+    host: "smtp.ethereal.email",
+    port: 587,
+    secure: false, // true for 465, false for other ports
+    auth: {
+      user: "mosqueefrance2021@gmail.com",
+      pass: "azerty@1234"
+    }
+  });
+  const options = {
+    from: "mosqueefrance2021@gmail.com",
+    to: req.params.email,
+    subject: "Mosquee",
+    html:`
+    <h2>désolé (monsieur/madame) `+ req.params.nom_condidat+` </h2>
+    <h3> nous avons Modifier (l'offre/cours) , et voici les nouvelles  informations  de  notre offre </h3>
+    <br/>
+    <h4> nom offre : `+req.body.nom_offre+ ` </h4>
+    <h4> description : `+req.body.description+ ` </h4>
+    <h4> date debut : `+req.body.date_debut+ ` </h4>
+    <h4> date fin : `+req.body.date_fin+ ` </h4>
+    <h4> prix : `+req.body.prix+ ` </h4>
+    <h4> type : `+req.body.type+ ` </h4>
+    
+
+    `,
+    
+    
+  };
+  transp.sendMail(options, function (err, info) {
+    if (err) {
+      return;
+    }
   })
 res.json()
 })
